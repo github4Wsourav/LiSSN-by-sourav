@@ -1,6 +1,7 @@
 package com.simpmusic.media_jvm.mpv
 
 import com.maxrave.domain.data.player.AudioEffects
+import com.maxrave.domain.data.player.FxSoundConfig
 import com.maxrave.logger.Logger
 import com.sun.jna.Memory
 import com.sun.jna.Pointer

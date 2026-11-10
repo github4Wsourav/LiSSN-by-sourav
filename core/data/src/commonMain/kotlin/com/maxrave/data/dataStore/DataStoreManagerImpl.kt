@@ -653,7 +653,7 @@ internal class DataStoreManagerImpl(
                 settings[EQUALIZER_TYPE] = type
             }
         }
-
+    }
 
     override val fxSoundEnabled: Flow<Boolean> =
         settingsDataStore.data.map { preferences ->
@@ -744,7 +744,6 @@ internal class DataStoreManagerImpl(
                 settings[FXSOUND_EQ_BANDS] = bands.joinToString(",")
             }
         }
-    }
     }
 
     override val equalizerAutoEqProfile: Flow<String> =

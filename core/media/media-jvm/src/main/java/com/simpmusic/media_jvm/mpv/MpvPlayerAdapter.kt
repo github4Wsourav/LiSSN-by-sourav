@@ -1249,7 +1249,7 @@ class MpvPlayerAdapter(
         coroutineScope.launch {
             forEachLiveHandle { it.setEqualizer(bandsDb, preampDb) }
         }
-
+    }
 
     @Volatile
     private var internalFxSoundConfig: FxSoundConfig = FxSoundConfig()
@@ -1259,7 +1259,6 @@ class MpvPlayerAdapter(
         coroutineScope.launch {
             forEachLiveHandle { it.setFxSound(config) }
         }
-    }
     }
 
     /** Current effects, so a handle created later can be brought up to the same setting. */
