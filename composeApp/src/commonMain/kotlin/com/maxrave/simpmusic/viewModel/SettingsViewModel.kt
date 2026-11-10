@@ -2140,6 +2140,7 @@ dataStoreManager.equalizerEnabled.collect {
             dataStoreManager.setHelpBuildLyricsDatabase(help)
             getHelpBuildLyricsDatabase()
         }
+    }
 
     // ==================== FxSound DSP Settings ====================
     private val _fxSoundEnabled = MutableStateFlow(false)
@@ -2202,6 +2203,9 @@ dataStoreManager.equalizerEnabled.collect {
         }
     }
 }
+
+const val EQUALIZER_BAND_COUNT: Int = 10
+val EQUALIZER_BAND_LABELS: List<String> = listOf("31", "62", "125", "250", "500", "1k", "2k", "4k", "8k", "16k")
 
 data class SettingsStorageSectionFraction(
     val otherApp: Float = 0f,
