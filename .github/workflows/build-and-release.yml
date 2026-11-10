@@ -1,144 +1,163 @@
-name: Build and Release LiSSN by sourav
+name: Build and Release LiSSN
 
 on:
-  workflow_dispatch:
   push:
-    branches:
-      - main
     tags:
       - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag to build (for example v2.5.0)
+        required: true
+        type: string
 
 permissions:
   contents: write
 
 jobs:
+  release-info:
+    name: Validate release version
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.version.outputs.tag }}
+    steps:
+      - name: Resolve and validate tag
+        id: version
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          REF_NAME: ${{ github.ref_name }}
+          INPUT_TAG: ${{ inputs.tag }}
+        run: |
+          if [[ "$EVENT_NAME" == "push" ]]; then
+            tag="$REF_NAME"
+          else
+            tag="$INPUT_TAG"
+          fi
+          if [[ ! "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+([.-][0-9A-Za-z.-]+)?$ ]]; then
+            echo "Invalid release tag: $tag (expected vX.Y.Z)" >&2
+            exit 1
+          fi
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+
   build-android:
     name: Build Android APK
+    needs: release-info
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Repository
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
           java-version: '21'
-          distribution: 'temurin'
-          cache: 'gradle'
+          distribution: temurin
+          cache: gradle
 
       - name: Configure Android SDK
         run: |
           echo "sdk.dir=$ANDROID_HOME" > local.properties
           echo "isFullBuild=false" >> gradle.properties
 
-      - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
+      - name: Build installable Android APK
+        run: |
+          chmod +x ./gradlew
+          ./gradlew :androidApp:assembleDebug --no-daemon
 
-      - name: Build Android APK
-        run: ./gradlew :androidApp:assembleDebug --no-daemon
-
-      - name: Prepare APK Asset
+      - name: Prepare Android release asset
         run: |
           mkdir -p release_assets
-          APK_FILE=$(find androidApp/build/outputs/apk -name "*.apk" | head -n 1)
-          if [ -n "$APK_FILE" ]; then
-            cp "$APK_FILE" release_assets/LiSSN-by-sourav-v1.0.0.apk
-          fi
+          apk="androidApp/build/outputs/apk/debug/androidApp-debug.apk"
+          test -s "$apk"
+          cp "$apk" release_assets/LiSSN-Android.apk
 
-      - name: Upload Android Artifact
+      - name: Upload Android artifact
         uses: actions/upload-artifact@v4
         with:
-          name: LiSSN-by-sourav-Android-APK
+          name: android-apk
           path: release_assets/*.apk
+          if-no-files-found: error
+          retention-days: 14
 
-  build-desktop:
-    name: Build Desktop App (Windows)
+  build-windows:
+    name: Build Windows desktop app
+    needs: release-info
     runs-on: windows-latest
     steps:
-      - name: Checkout Repository
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
           java-version: '21'
-          distribution: 'temurin'
-          cache: 'gradle'
+          distribution: temurin
+          cache: gradle
 
-      - name: Create local.properties
-        shell: bash
-        run: |
-          touch local.properties
-          echo "isFullBuild=false" >> gradle.properties
-
-      - name: Build Desktop Distributable
-        shell: cmd
-        run: |
-          gradlew.bat :desktopApp:createDistributable --no-daemon
-
-      - name: Compress Desktop Distributable
+      - name: Configure Gradle
         shell: pwsh
         run: |
-          New-Item -ItemType Directory -Force -Path release_assets
-          $distDir = Get-ChildItem -Path "desktopApp/build/compose/binaries/main" -Recurse -Directory -ErrorAction SilentlyContinue | Where-Object { Test-Path (Join-Path $_.FullName "*.exe") } | Select-Object -First 1
-          if ($distDir) {
-              Compress-Archive -Path "$($distDir.FullName)\*" -DestinationPath "release_assets/LiSSN-by-sourav-desktop-windows.zip" -Force
-          } elseif (Test-Path "desktopApp/build/compose/binaries/main/app") {
-              Compress-Archive -Path "desktopApp/build/compose/binaries/main/app/*" -DestinationPath "release_assets/LiSSN-by-sourav-desktop-windows.zip" -Force
-          } elseif (Test-Path "desktopApp/build") {
-              Compress-Archive -Path "desktopApp/build/*" -DestinationPath "release_assets/LiSSN-by-sourav-desktop-windows.zip" -Force
-          }
+          New-Item -ItemType File -Force local.properties | Out-Null
+          Add-Content gradle.properties 'isFullBuild=false'
 
-      - name: Upload Desktop Artifact
+      - name: Stage Windows media runtime
+        shell: cmd
+        run: gradlew.bat :composeApp:mpvSetupWindowsX64Ci --no-daemon
+
+      - name: Build Windows desktop distributable
+        shell: cmd
+        run: gradlew.bat :desktopApp:createDistributable --no-daemon
+
+      - name: Package Windows release asset
+        shell: pwsh
+        run: |
+          $distRoot = 'desktopApp/build/compose/binaries/main'
+          $appDir = Get-ChildItem -Path $distRoot -Directory -Recurse -ErrorAction SilentlyContinue |
+            Where-Object { Get-ChildItem -Path $_.FullName -Filter '*.exe' -File -ErrorAction SilentlyContinue } |
+            Select-Object -First 1
+          if (-not $appDir) { throw "No Windows application executable found under $distRoot" }
+          New-Item -ItemType Directory -Force -Path release_assets | Out-Null
+          $zip = 'release_assets/LiSSN-Windows.zip'
+          Compress-Archive -Path (Join-Path $appDir.FullName '*') -DestinationPath $zip -Force
+          if ((Get-Item $zip).Length -eq 0) { throw 'Windows archive is empty' }
+
+      - name: Upload Windows artifact
         uses: actions/upload-artifact@v4
         with:
-          name: LiSSN-by-sourav-Desktop-Windows
+          name: windows-desktop
           path: release_assets/*.zip
+          if-no-files-found: error
+          retention-days: 14
 
   publish-release:
-    name: Publish GitHub Release
-    needs: [build-android, build-desktop]
+    name: Publish GitHub release
+    needs: [release-info, build-android, build-windows]
     runs-on: ubuntu-latest
-    if: always() && (needs.build-android.result == 'success' || needs.build-desktop.result == 'success')
     steps:
-      - name: Download Android Artifact
+      - name: Download Android artifact
         uses: actions/download-artifact@v4
-        continue-on-error: true
         with:
-          name: LiSSN-by-sourav-Android-APK
+          name: android-apk
           path: release_files
 
-      - name: Download Desktop Artifact
+      - name: Download Windows artifact
         uses: actions/download-artifact@v4
-        continue-on-error: true
         with:
-          name: LiSSN-by-sourav-Desktop-Windows
+          name: windows-desktop
           path: release_files
 
-      - name: Create GitHub Release
+      - name: Create or update GitHub release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.0.0
-          name: "LiSSN by sourav v1.0.0 (Official Release)"
-          body: |
-            ## 🎵 LiSSN by sourav v1.0.0
-
-            A modern, high-fidelity music streaming client created by **Sourav** with integrated **FxSound 64-bit DSP Audio Enhancer**, **Google Account Login**, **Listen Together (Party Mode)**, and **Song Downloads**.
-
-            ### 📥 Download Links
-            - 📱 **Android Phone**: [`LiSSN-by-sourav-v1.0.0.apk`](https://github.com/${{ github.repository }}/releases/download/v1.0.0/LiSSN-by-sourav-v1.0.0.apk)
-            - 💻 **Laptop / Windows Desktop**: [`LiSSN-by-sourav-desktop-windows.zip`](https://github.com/${{ github.repository }}/releases/download/v1.0.0/LiSSN-by-sourav-desktop-windows.zip)
-
-            ### ✨ Key Features
-            - 🔐 **Google Account Login**: Sign in directly with your Google account.
-            - 🎛️ **FxSound DSP Audio Engine**: Real-time voice clarity exciter, 3D surround sound, punchy HyperBass, and dynamic loudness maximizer.
-            - 🖼️ **Pure Music & Thumbnails**: Clean, high-resolution album artwork without video or lyric distractions.
-            - ⬇️ **Song Downloader**: 1-click downloads for every song.
-            - 👥 **Listen Together**: Synchronized co-listening with host & join room codes.
-            - ⚡ **Cross-Platform**: Runs seamlessly on phones and laptops.
-          files: |
-            release_files/*
+          tag_name: ${{ needs.release-info.outputs.tag }}
+          target_commitish: ${{ github.sha }}
+          name: LiSSN by sourav ${{ needs.release-info.outputs.tag }}
+          generate_release_notes: true
+          files: release_files/*
+          fail_on_unmatched_files: true
+          overwrite_files: true
           draft: false
-          prerelease: false
+          prerelease: ${{ contains(needs.release-info.outputs.tag, '-') }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

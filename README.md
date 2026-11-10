@@ -3,9 +3,9 @@
 > **A next-generation, high-fidelity music streaming client for Android and Desktop created by Sourav.**  
 > Powered by Compose Multiplatform and featuring a natively integrated **FxSound 64-bit DSP Audio Enhancer**, **Google Account Login**, **Listen Together (Room Host/Join)**, and **1-Click Offline Downloads**.
 
-[![Official Release](https://img.shields.io/badge/Release-v1.0.0-blue?style=for-the-badge&logo=github)](https://github.com/github4Wsourav/LiSSN-by-sourav/releases)
-[![Download APK](https://img.shields.io/badge/Download_APK-v1.0.0-3DDC84?style=for-the-badge&logo=android&logoColor=white)](https://github.com/github4Wsourav/LiSSN-by-sourav/releases/download/v1.0.0/LiSSN-by-sourav-v1.0.0.apk)
-[![Download Desktop](https://img.shields.io/badge/Download_Desktop-Windows-0078D4?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/github4Wsourav/LiSSN-by-sourav/releases/download/v1.0.0/LiSSN-by-sourav-desktop-windows.zip)
+[![Latest Release](https://img.shields.io/github/v/release/github4Wsourav/LiSSN-by-sourav?style=for-the-badge&logo=github)](https://github.com/github4Wsourav/LiSSN-by-sourav/releases/latest)
+[![Download APK](https://img.shields.io/badge/Download_Android_APK-3DDC84?style=for-the-badge&logo=android&logoColor=white)](https://github.com/github4Wsourav/LiSSN-by-sourav/releases/latest/download/LiSSN-Android.apk)
+[![Download Desktop](https://img.shields.io/badge/Download_Windows-0078D4?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/github4Wsourav/LiSSN-by-sourav/releases/latest/download/LiSSN-Windows.zip)
 [![FxSound Powered](https://img.shields.io/badge/FxSound-DSP_Engine-FF2A6D?style=for-the-badge&logo=soundcharts&logoColor=white)](https://github.com/fxsound2/fxsound-app)
 
 ---
@@ -14,8 +14,12 @@
 
 | Platform | Download Link | Description |
 |---|---|---|
-| 📱 **Android Phone** | **[LiSSN-by-sourav-v1.0.0.apk](https://github.com/github4Wsourav/LiSSN-by-sourav/releases/download/v1.0.0/LiSSN-by-sourav-v1.0.0.apk)** | Standalone APK for Android 8.0+ |
-| 💻 **Laptop / Windows** | **[LiSSN-by-sourav-desktop-windows.zip](https://github.com/github4Wsourav/LiSSN-by-sourav/releases/download/v1.0.0/LiSSN-by-sourav-desktop-windows.zip)** | Portable Windows application |
+| 📱 **Android Phone** | **[Download the latest Android APK](https://github.com/github4Wsourav/LiSSN-by-sourav/releases/latest/download/LiSSN-Android.apk)** | Install on Android 8.0+ |
+| 💻 **Windows Laptop** | **[Download the latest Windows app](https://github.com/github4Wsourav/LiSSN-by-sourav/releases/latest/download/LiSSN-Windows.zip)** | Extract the ZIP, then launch the included LiSSN executable |
+
+Android may ask you to allow your browser or file manager to install apps. Approve that prompt to install the downloaded APK.
+
+Releases are built automatically when a `vX.Y.Z` tag is pushed. Each release contains both assets above. To publish a version, push its tag (for example, `v2.5.0`) and wait for the **Build and Release LiSSN** workflow to finish successfully. A release is published only after both platform builds succeed.
 
 ---
 
@@ -92,13 +96,13 @@ LiSSN by sourav
 ```bash
 ./gradlew :androidApp:assembleDebug
 ```
-Output: `androidApp/build/outputs/apk/debug/androidApp-debug.apk`
+Output: `androidApp/build/outputs/apk/debug/androidApp-debug.apk` (debug-signed APK)
 
 ### Build Desktop Application
 ```bash
 ./gradlew :desktopApp:createDistributable
 ```
-Output: `desktopApp/build/compose/binaries/main/app/`
+Output: `desktopApp/build/compose/binaries/main/` (Windows application image on Windows)
 
 ---
 
