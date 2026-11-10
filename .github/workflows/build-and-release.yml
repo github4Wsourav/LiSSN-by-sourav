@@ -26,12 +26,9 @@ jobs:
           distribution: 'temurin'
           cache: 'gradle'
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Create local.properties
+      - name: Configure Android SDK
         run: |
-          touch local.properties
+          echo "sdk.dir=$ANDROID_HOME" > local.properties
           echo "isFullBuild=false" >> gradle.properties
 
       - name: Grant execute permission for gradlew
