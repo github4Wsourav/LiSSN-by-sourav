@@ -34,7 +34,7 @@ val coreDir = File(rootDir, "core")
 val serviceDir = File(rootDir, "core/service")
 val mediaDir = File(rootDir, "core/media")
 
-rootProject.name = "LiSSN-by-sourav"
+rootProject.name = "simpmusic"
 include(
     ":androidApp",
     ":vivoAndroidApp",
