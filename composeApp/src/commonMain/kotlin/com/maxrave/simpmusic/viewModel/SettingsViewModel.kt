@@ -2205,6 +2205,10 @@ class SettingsViewModel(
 
 const val EQUALIZER_BAND_COUNT: Int = 10
 val EQUALIZER_BAND_LABELS: List<String> = listOf("31", "62", "125", "250", "500", "1k", "2k", "4k", "8k", "16k")
+const val DEFAULT_DELAY_TIME_MS: Int = 400
+const val DEFAULT_DELAY_FEEDBACK: Float = 0.45f
+const val DEFAULT_DELAY_MIX: Float = 0.3f
+const val DEFAULT_REVERB_MIX: Float = 0.35f
 
 data class SettingsStorageSectionFraction(
     val otherApp: Float = 0f,
