@@ -1,0 +1,139 @@
+name: Build and Release LiSSN by sourav
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build-android:
+    name: Build Android APK
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'gradle'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Create local.properties
+        run: |
+          touch local.properties
+          echo "isFullBuild=false" >> gradle.properties
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Build Android APK
+        run: ./gradlew :androidApp:assembleDebug --no-daemon
+
+      - name: Prepare APK Asset
+        run: |
+          mkdir -p release_assets
+          cp androidApp/build/outputs/apk/debug/*.apk release_assets/LiSSN-by-sourav-v1.0.0.apk || cp androidApp/build/outputs/apk/*/*/*.apk release_assets/LiSSN-by-sourav-v1.0.0.apk || true
+
+      - name: Upload Android Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: LiSSN-by-sourav-Android-APK
+          path: release_assets/*.apk
+
+  build-desktop:
+    name: Build Desktop App (Windows)
+    runs-on: windows-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'gradle'
+
+      - name: Create local.properties
+        shell: bash
+        run: |
+          touch local.properties
+          echo "isFullBuild=false" >> gradle.properties
+
+      - name: Build Desktop Distributable
+        shell: cmd
+        run: |
+          gradlew.bat :desktopApp:createDistributable --no-daemon
+
+      - name: Compress Desktop Distributable
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path release_assets
+          if (Test-Path "desktopApp/build/compose/binaries/main/app") {
+              Compress-Archive -Path "desktopApp/build/compose/binaries/main/app/*" -DestinationPath "release_assets/LiSSN-by-sourav-desktop-windows.zip" -Force
+          } elseif (Test-Path "desktopApp/build") {
+              Compress-Archive -Path "desktopApp/build/*" -DestinationPath "release_assets/LiSSN-by-sourav-desktop-windows.zip" -Force
+          }
+
+      - name: Upload Desktop Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: LiSSN-by-sourav-Desktop-Windows
+          path: release_assets/*.zip
+
+  publish-release:
+    name: Publish GitHub Release
+    needs: [build-android, build-desktop]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
+    steps:
+      - name: Download Android Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: LiSSN-by-sourav-Android-APK
+          path: release_files
+
+      - name: Download Desktop Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: LiSSN-by-sourav-Desktop-Windows
+          path: release_files
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0.0
+          name: "LiSSN by sourav v1.0.0 (Official Release)"
+          body: |
+            ## 🎵 LiSSN by sourav v1.0.0
+
+            A modern, high-fidelity music streaming client created by **Sourav** with integrated **FxSound 64-bit DSP Audio Enhancer**, **Google Account Login**, **Listen Together (Party Mode)**, and **Song Downloads**.
+
+            ### 📥 Download Links
+            - 📱 **Android Phone**: [`LiSSN-by-sourav-v1.0.0.apk`](https://github.com/${{ github.repository }}/releases/download/v1.0.0/LiSSN-by-sourav-v1.0.0.apk)
+            - 💻 **Laptop / Windows Desktop**: [`LiSSN-by-sourav-desktop-windows.zip`](https://github.com/${{ github.repository }}/releases/download/v1.0.0/LiSSN-by-sourav-desktop-windows.zip)
+
+            ### ✨ Key Features
+            - 🔐 **Google Account Login**: Sign in directly with your Google account.
+            - 🎛️ **FxSound DSP Audio Engine**: Real-time voice clarity exciter, 3D surround sound, punchy HyperBass, and dynamic loudness maximizer.
+            - 🖼️ **Pure Music & Thumbnails**: Clean, high-resolution album artwork without video or lyric distractions.
+            - ⬇️ **Song Downloader**: 1-click downloads for every song.
+            - 👥 **Listen Together**: Synchronized co-listening with host & join room codes.
+            - ⚡ **Cross-Platform**: Runs seamlessly on phones and laptops.
+          files: |
+            release_files/*
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
