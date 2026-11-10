@@ -1798,8 +1798,6 @@ class SettingsViewModel(
         equalizerCollectorsStarted = true
         viewModelScope.launch {
             launch {
-                
-            launch {
                 dataStoreManager.fxSoundEnabled.collect { _fxSoundEnabled.emit(it) }
             }
             launch {
@@ -1818,7 +1816,8 @@ class SettingsViewModel(
                 dataStoreManager.fxSoundPreset.collect { _fxSoundPreset.emit(it) }
             }
 
-dataStoreManager.equalizerEnabled.collect {
+            launch {
+                dataStoreManager.equalizerEnabled.collect {
                     _equalizerEnabled.emit(it == DataStoreManager.TRUE)
                 }
             }

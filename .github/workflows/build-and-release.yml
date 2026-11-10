@@ -103,11 +103,11 @@ jobs:
 
       - name: Stage Windows media runtime
         shell: cmd
-        run: gradlew.bat :composeApp:mpvSetupWindowsX64Ci --no-daemon
+        run: gradlew.bat :composeApp:mpvSetupWindowsX64Ci --no-daemon --no-configuration-cache
 
       - name: Build Windows desktop distributable
         shell: cmd
-        run: gradlew.bat :desktopApp:createDistributable --no-daemon
+        run: gradlew.bat :desktopApp:createDistributable --no-daemon --no-configuration-cache
 
       - name: Package Windows release asset
         shell: pwsh

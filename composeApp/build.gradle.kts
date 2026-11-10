@@ -327,8 +327,8 @@ val mpvCacheDir = layout.buildDirectory.dir("mpv-cache")
 // API 2.5; MpvLibrary.kt was written against 2.2 and only guards the major.
 // mpv's own tagged release — the source of the macOS slices.
 val mpvVersion = "0.41.0"
-val mpvWinBuildTag = "20260610"
-val mpvWinBuildSuffix = "20260610-git-304426c"
+val mpvWinBuildTag = "20261109"
+val mpvWinBuildSuffix = "20261109-git-8bc468896e"
 // Linux has no upstream pin: that slice is compiled from source by
 // scripts/mpv-linux/Dockerfile, which pins mpv, FFmpeg and libplacebo itself.
 
