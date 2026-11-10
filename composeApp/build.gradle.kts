@@ -35,6 +35,7 @@ plugins {
 // Force it to `always` so `Res` is generated for this app module.
 compose.resources {
     generateResClass = always
+    packageOfResClass = "simpmusic.composeapp.generated.resources"
 }
 
 kotlin {

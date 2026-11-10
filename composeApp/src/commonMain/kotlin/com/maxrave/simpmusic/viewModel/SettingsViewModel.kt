@@ -2140,60 +2140,6 @@ dataStoreManager.equalizerEnabled.collect {
             dataStoreManager.setHelpBuildLyricsDatabase(help)
             getHelpBuildLyricsDatabase()
         }
-    }
-}
-
-data class SettingsStorageSectionFraction(
-    val otherApp: Float = 0f,
-    val downloadCache: Float = 0f,
-    val playerCache: Float = 0f,
-    val canvasCache: Float = 0f,
-    val thumbCache: Float = 0f,
-    val appDatabase: Float = 0f,
-    val freeSpace: Float = 0f,
-) {
-    fun combine(): Float = otherApp + downloadCache + playerCache + canvasCache + thumbCache + appDatabase + freeSpace
-}
-
-data class SettingAlertState(
-    val title: String,
-    val message: String? = null,
-    val textField: TextFieldData? = null,
-    val selectOne: SelectData? = null,
-    val multipleSelect: SelectData? = null,
-    val confirm: Pair<String, (SettingAlertState) -> Unit>,
-    val dismiss: String,
-) {
-    data class TextFieldData(
-        val label: String,
-        val value: String = "",
-        // User typing string -> (true or false, If false, show error message)
-        val verifyCodeBlock: ((String) -> Pair<Boolean, String?>)? = null,
-    )
-
-    data class SelectData(
-        // Selected / Data
-        val listSelect: List<Pair<Boolean, String>>,
-    ) {
-        fun getSelected(): String = listSelect.firstOrNull { it.first }?.second ?: ""
-
-        fun getListSelected(): List<String> = listSelect.filter { it.first }.map { it.second }
-    }
-}
-
-data class SettingBasicAlertState(
-    val title: String,
-    val message: String? = null,
-    val confirm: Pair<String, () -> Unit>,
-    val dismiss: String,
-)
-
-expect suspend fun calculateDataFraction(cacheRepository: CacheRepository): SettingsStorageSectionFraction?
-
-expect suspend fun restoreNative(
-    commonRepository: CommonRepository,
-    uri: Uri,
-    getData: () -> Unit = {
 
     // ==================== FxSound DSP Settings ====================
     private val _fxSoundEnabled = MutableStateFlow(false)
@@ -2255,5 +2201,71 @@ expect suspend fun restoreNative(
             dataStoreManager.setFxSoundEqBands(preset.bandsDb)
         }
     }
-
 }
+
+data class SettingsStorageSectionFraction(
+    val otherApp: Float = 0f,
+    val downloadCache: Float = 0f,
+    val playerCache: Float = 0f,
+    val canvasCache: Float = 0f,
+    val thumbCache: Float = 0f,
+    val appDatabase: Float = 0f,
+    val freeSpace: Float = 0f,
+) {
+    fun combine(): Float = otherApp + downloadCache + playerCache + canvasCache + thumbCache + appDatabase + freeSpace
+}
+
+data class SettingAlertState(
+    val title: String,
+    val message: String? = null,
+    val textField: TextFieldData? = null,
+    val selectOne: SelectData? = null,
+    val multipleSelect: SelectData? = null,
+    val confirm: Pair<String, (SettingAlertState) -> Unit>,
+    val dismiss: String,
+) {
+    data class TextFieldData(
+        val label: String,
+        val value: String = "",
+        // User typing string -> (true or false, If false, show error message)
+        val verifyCodeBlock: ((String) -> Pair<Boolean, String?>)? = null,
+    )
+
+    data class SelectData(
+        // Selected / Data
+        val listSelect: List<Pair<Boolean, String>>,
+    ) {
+        fun getSelected(): String = listSelect.firstOrNull { it.first }?.second ?: ""
+
+        fun getListSelected(): List<String> = listSelect.filter { it.first }.map { it.second }
+    }
+}
+
+data class SettingBasicAlertState(
+    val title: String,
+    val message: String? = null,
+    val confirm: Pair<String, () -> Unit>,
+    val dismiss: String,
+)
+
+expect suspend fun calculateDataFraction(cacheRepository: CacheRepository): SettingsStorageSectionFraction?
+
+expect suspend fun readPickedFile(uri: Uri): ByteArray
+
+expect suspend fun restoreNative(
+    commonRepository: CommonRepository,
+    uri: Uri,
+    getData: () -> Unit = {},
+)
+
+expect suspend fun backupNative(
+    commonRepository: CommonRepository,
+    uri: Uri,
+    backupDownloaded: Boolean,
+)
+
+expect fun getPackageName(): String
+
+expect fun getFileDir(): String
+
+expect fun changeLanguageNative(code: String)
