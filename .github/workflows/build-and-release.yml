@@ -68,8 +68,12 @@ jobs:
       - name: Prepare Android release asset
         run: |
           mkdir -p release_assets
-          apk="androidApp/build/outputs/apk/debug/androidApp-debug.apk"
-          test -s "$apk"
+          apk="$(find androidApp/build/outputs/apk -type f -name '*.apk' -print -quit)"
+          if [[ -z "$apk" || ! -s "$apk" ]]; then
+            echo "No non-empty APK found under androidApp/build/outputs/apk" >&2
+            find androidApp/build/outputs/apk -maxdepth 4 -type f -print || true
+            exit 1
+          fi
           cp "$apk" release_assets/LiSSN-Android.apk
 
       - name: Upload Android artifact
