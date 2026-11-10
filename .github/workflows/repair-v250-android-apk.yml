@@ -1,0 +1,62 @@
+name: Repair v2.5.0 Android APK
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-replace-apk:
+    name: Build and validate universal v2.5.0 APK
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: temurin
+          cache: gradle
+
+      - name: Configure Android SDK
+        run: |
+          echo "sdk.dir=$ANDROID_HOME" > local.properties
+          echo "isFullBuild=false" >> gradle.properties
+
+      - name: Build original debug app as universal APK
+        run: |
+          chmod +x ./gradlew
+          ./gradlew :androidApp:assembleDebug --no-daemon
+
+      - name: Validate APK identity, Android range, and ABIs
+        id: apk
+        shell: bash
+        run: |
+          set -euo pipefail
+          apk="$(find androidApp/build/outputs/apk/debug -type f -iname '*universal*debug*.apk' -print -quit)"
+          if [[ -z "$apk" || ! -s "$apk" ]]; then
+            echo "Universal debug APK was not produced" >&2
+            find androidApp/build/outputs/apk/debug -maxdepth 3 -type f -print || true
+            exit 1
+          fi
+          aapt="$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -n 1)/aapt"
+          badging="$("$aapt" dump badging "$apk")"
+          printf '%s\n' "$badging" | grep -Fq "package: name='com.maxrave.simpmusic.dev' versionCode='62' versionName='2.5.0-dev'"
+          printf '%s\n' "$badging" | grep -Fq "sdkVersion:'26'"
+          printf '%s\n' "$badging" | grep -Fq "targetSdkVersion:'36'"
+          printf '%s\n' "$badging" | grep -Fq "native-code: 'arm64-v8a' 'armeabi-v7a' 'x86_64'"
+          mkdir -p release_assets
+          cp "$apk" release_assets/LiSSN-Android.apk
+          echo "apk=$apk" >> "$GITHUB_OUTPUT"
+          echo "Validated $apk ($(stat -c%s "$apk") bytes)"
+          printf '%s\n' "$badging" | grep -E "^(package:|sdkVersion:|targetSdkVersion:|native-code:)"
+
+      - name: Replace only the Android APK on v2.5.0
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload v2.5.0 release_assets/LiSSN-Android.apk --clobber --repo "$GITHUB_REPOSITORY"

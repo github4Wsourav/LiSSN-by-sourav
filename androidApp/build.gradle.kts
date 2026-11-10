@@ -83,6 +83,18 @@ android {
         }
     }
 
+    // Emit ABI-specific APKs and a universal APK for every build type. The previous
+    // configuration only enabled ABI splits for release builds, so the directly-downloadable
+    // debug APK contained x86_64 native libraries only and could not install on ARM phones.
+    splits {
+        abi {
+            isEnable = true
+            reset()
+            include(*abis)
+            isUniversalApk = true
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = true
@@ -94,14 +106,6 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",
             )
-            splits {
-                abi {
-                    isEnable = true
-                    reset()
-                    isUniversalApk = true
-                    include(*abis)
-                }
-            }
         }
         debug {
             isMinifyEnabled = false
