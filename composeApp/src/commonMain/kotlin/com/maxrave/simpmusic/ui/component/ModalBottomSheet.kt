@@ -1862,7 +1862,8 @@ fun NowPlayingBottomSheet(
                     // Quick FxSound Audio Enhancer toggle
                     val fxSoundEnabled by dataStoreManager.fxSoundEnabled.collectAsState(false)
                     ActionButton(
-                        icon = SimpIcons.Equalizer,
+                        icon = SimpIcons.Tune,
+                        text = null,
                         textString = if (fxSoundEnabled) "🎛️ FxSound: ON (Audio Enhanced)" else "🎛️ FxSound: OFF",
                         textColor = if (fxSoundEnabled) Color(0xFF00E5FF) else Color.Unspecified,
                         iconColor = if (fxSoundEnabled) Color(0xFF00E5FF) else Color.Unspecified,
@@ -1968,7 +1969,7 @@ fun AddToQueueBlock?.addToQueueLabel(): StringResource {
 @Composable
 fun ActionButton(
     icon: ImageVector,
-    text: StringResource?,
+    text: StringResource? = null,
     textString: String? = null,
     textColor: Color? = null,
     iconColor: Color = Color.Unspecified,
