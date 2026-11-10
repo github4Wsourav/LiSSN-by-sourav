@@ -7,6 +7,9 @@ on:
     paths:
       - '.github/workflows/repair-v250-android-apk.yml'
       - 'androidApp/build.gradle.kts'
+      - 'androidApp/src/main/res/drawable/lissn_ss_icon*.xml'
+      - 'androidApp/src/main/res/mipmap-anydpi-v26/ic_launcher*.xml'
+      - 'androidApp/src/main/res/values/colors.xml'
       - 'gradle/libs.versions.toml'
   workflow_dispatch:
 
