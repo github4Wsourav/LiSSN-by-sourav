@@ -1,6 +1,13 @@
 name: Repair v2.5.0 Android APK
 
 on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/repair-v250-android-apk.yml'
+      - 'androidApp/build.gradle.kts'
+      - 'gradle/libs.versions.toml'
   workflow_dispatch:
 
 permissions:
