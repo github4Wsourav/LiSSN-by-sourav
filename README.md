@@ -19,6 +19,8 @@
 
 Android may ask you to allow your browser or file manager to install apps. Approve that prompt to install the downloaded APK.
 
+For a copy of **LiSSN 2.5.0** built for ARM64 devices running Android 12–16, use the [2.5.0 ARM64 compatibility release](https://github.com/github4Wsourav/LiSSN-by-sourav/releases/download/v2.5.0-arm64/LiSSN-Android.apk). The original [v2.5.0 release](https://github.com/github4Wsourav/LiSSN-by-sourav/releases/tag/v2.5.0) remains available as published.
+
 Releases are built automatically when a `vX.Y.Z` tag is pushed. Each release contains both assets above. To publish a version, push its tag (for example, `v2.5.1`) and wait for the **Build and Release LiSSN** workflow to finish successfully. A release is published only after both platform builds succeed.
 
 ---
