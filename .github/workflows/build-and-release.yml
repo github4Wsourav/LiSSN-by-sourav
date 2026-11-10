@@ -43,7 +43,10 @@ jobs:
       - name: Prepare APK Asset
         run: |
           mkdir -p release_assets
-          cp androidApp/build/outputs/apk/debug/*.apk release_assets/LiSSN-by-sourav-v1.0.0.apk || cp androidApp/build/outputs/apk/*/*/*.apk release_assets/LiSSN-by-sourav-v1.0.0.apk || true
+          APK_FILE=$(find androidApp/build/outputs/apk -name "*.apk" | head -n 1)
+          if [ -n "$APK_FILE" ]; then
+            cp "$APK_FILE" release_assets/LiSSN-by-sourav-v1.0.0.apk
+          fi
 
       - name: Upload Android Artifact
         uses: actions/upload-artifact@v4
@@ -80,7 +83,10 @@ jobs:
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path release_assets
-          if (Test-Path "desktopApp/build/compose/binaries/main/app") {
+          $distDir = Get-ChildItem -Path "desktopApp/build/compose/binaries/main" -Recurse -Directory -ErrorAction SilentlyContinue | Where-Object { Test-Path (Join-Path $_.FullName "*.exe") } | Select-Object -First 1
+          if ($distDir) {
+              Compress-Archive -Path "$($distDir.FullName)\*" -DestinationPath "release_assets/LiSSN-by-sourav-desktop-windows.zip" -Force
+          } elseif (Test-Path "desktopApp/build/compose/binaries/main/app") {
               Compress-Archive -Path "desktopApp/build/compose/binaries/main/app/*" -DestinationPath "release_assets/LiSSN-by-sourav-desktop-windows.zip" -Force
           } elseif (Test-Path "desktopApp/build") {
               Compress-Archive -Path "desktopApp/build/*" -DestinationPath "release_assets/LiSSN-by-sourav-desktop-windows.zip" -Force
@@ -96,16 +102,18 @@ jobs:
     name: Publish GitHub Release
     needs: [build-android, build-desktop]
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
+    if: always() && (needs.build-android.result == 'success' || needs.build-desktop.result == 'success')
     steps:
       - name: Download Android Artifact
         uses: actions/download-artifact@v4
+        continue-on-error: true
         with:
           name: LiSSN-by-sourav-Android-APK
           path: release_files
 
       - name: Download Desktop Artifact
         uses: actions/download-artifact@v4
+        continue-on-error: true
         with:
           name: LiSSN-by-sourav-Desktop-Windows
           path: release_files
