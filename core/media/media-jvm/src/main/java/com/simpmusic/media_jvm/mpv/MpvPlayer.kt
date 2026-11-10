@@ -932,7 +932,8 @@ class MpvPlayer private constructor(
             if (surroundWidth > 1.05f) filters.add("extrastereo=m=${mpvNumber(surroundWidth)}")
             if (dynBoost > 0.1f) filters.add("acompressor=threshold=-12dB:ratio=2.5:makeup=${mpvNumber(dynBoost)}")
             if (filters.isNotEmpty()) {
-                "@fxsound:lavfi=[${filters.joinToString(\",\")}]"
+                val joined = filters.joinToString(",")
+                "@fxsound:lavfi=[$joined]"
             } else null
         }
         return applyAudioFilters()
